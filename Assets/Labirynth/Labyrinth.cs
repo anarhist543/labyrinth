@@ -7,7 +7,7 @@ public class Labyrinth {
 
 	int width, height, sectorsNum, currentY = 0;
 	float screenWidth;
-	public GameObject squarePrefab;
+	GameObject squarePrefab;
 	Vector3 currentPosition;
 	bool activated = false;
 	bool first = true;
@@ -128,6 +128,34 @@ public class Labyrinth {
 	/// </summary>
 	/// <returns><c>true</c> если можно<c>false</c> если нельзя</returns>
 	public bool CanGo(Square _from, Square _to)
+	{
+		bool res = Check (_from, _to);
+		int x = 0, xMax = 0, y = 0, yMax = 0;
+		if (_from.posX < _to.posX) {
+			x = _from.posX;
+			xMax = _to.posX;
+		} else {
+			xMax = _from.posX;
+			x = _to.posX;
+		}
+		if (_from.posY < _to.posY) {
+			y = _from.posY;
+			yMax = _to.posY;
+		} else {
+			yMax = _from.posY;
+			y = _to.posY;
+		}
+		for (int i = x; i <= xMax; i++) {
+			for (int j = y; j <= yMax; j++) {
+				float r = squareArray [j, i].GetComponent<SpriteRenderer> ().color.r;
+				if (r <= 0.75)
+					squareArray [j, i].GetComponent<SpriteRenderer> ().color = new Color (r + 0.25f, 0, 0);
+			}
+		}
+		return res;
+	}
+
+	private bool Check(Square _from, Square _to)
 	{
 		if (_from == _to)
 			return false;
