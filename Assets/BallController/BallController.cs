@@ -3,22 +3,18 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour {
 
-    public float speed;
-    public float delta;
-    public Ray r;
-    public Camera cam;
-    public RaycastHit hit;
-    public List<Square> squareList;
+	public float speed;
+	public Camera cam;
+    Ray r;
+    RaycastHit hit;
+    List<Square> squareList;
 
-    void Start() {
-        System.Random rnd = new System.Random();
-        int rndNum = 35 + rnd.Next(0, 6);
-
-        GameObject squareStart;
-        squareStart = GameObject.Find("Square(Clone) (" + rndNum + ")");
-        transform.position = squareStart.transform.position;
-        squareList.Add(squareStart.GetComponent<Square>());
-    }
+	public void Init(Square s){
+		GameController.Instance.GetBall (gameObject);
+		squareList = new List<Square> ();
+		squareList.Add (s);
+		cam = GameController.Instance.gameCamera;
+	}
 
     void Update() {
 
@@ -56,26 +52,32 @@ public class BallController : MonoBehaviour {
             if (squareList.Count > 1)
                 squareList.RemoveAt(0);
         }
-
-        /*
-        //Тест
-        for (int i = 0; i < squareList.Count; i++) Debug.Log(System.String.Format("{0}", squareList[i]));
-        Debug.Log(System.String.Format("******************************************"));*/
     }
 
     //Метод нажатия на экран
     public void InputController() {
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved) {
-            r = cam.ScreenPointToRay(Input.GetTouch(0).position);
-            
+		if (Input.touchCount > 0 && (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(0).phase == TouchPhase.Began || Input.GetTouch(0).phase == TouchPhase.Ended)) {
+			r = cam.ScreenPointToRay(Input.GetTouch(0).position);
             if (Physics.Raycast(r, out hit, 1000f)) {
                 Square squareOne = hit.collider.GetComponent<Square>();
                 Square squareTwo = squareList[squareList.Count - 1];
-                if (true) {
+				if (GameController.Instance.CanGo(squareOne, squareTwo)) {
                     squareList.Add(squareOne);
                 }
             }
         }
+		#if UNITY_EDITOR
+		if(Input.GetMouseButton(0)) {
+			r = cam.ScreenPointToRay(Input.mousePosition);
+			if (Physics.Raycast(r, out hit, 1000f)) {
+				Square squareOne = hit.collider.GetComponent<Square>();
+				Square squareTwo = squareList[squareList.Count - 1];
+				if (GameController.Instance.CanGo(squareOne, squareTwo)) {
+					squareList.Add(squareOne);
+				}
+			}
+		}
+		#endif
     }
 
     public Square GetSquareLastTap(List<Square> squareList) {

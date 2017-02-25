@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Labyrinth {
 
@@ -11,6 +12,17 @@ public class Labyrinth {
 	Vector3 currentPosition;
 	bool activated = false;
 	bool first = true;
+	private int creationSector = -1;
+	private GameObject creationObject;
+
+
+
+	public void GenerateBall(int sectors, GameObject prefab)
+	{
+		creationSector = sectors;
+		creationObject = prefab;
+	}
+
 
 	/// <summary>
 	/// Функция задающая параметры лабиринта
@@ -40,6 +52,7 @@ public class Labyrinth {
 	/// </summary>
 	public void GenerateNextSector ()
 	{
+		creationSector--;
 		Square[,] sector = GenerateSector ();
 		for (int i = currentY; i < currentY + height; i++) {
 			for (int j = 0; j < width; j++) {
@@ -51,9 +64,22 @@ public class Labyrinth {
 				squareArray [i, j].posX = j;
 			}
 		}
+		if (creationSector == 0) {
+			GameObject created;
+			int r = Random.Range (0, width);
+			if (currentY == 0) {
+				created = (GameObject)Object.Instantiate (creationObject, squareArray [height * sectorsNum - 1, r].transform.position + Vector3.back, Quaternion.identity);
+				created.GetComponent<BallController> ().Init (squareArray [height * sectorsNum - 1, r]);
+			} else {
+				created = (GameObject)Object.Instantiate (creationObject, squareArray [currentY - 1, r].transform.position + Vector3.back, Quaternion.identity);
+				created.GetComponent<BallController> ().Init (squareArray [currentY - 1, r]);
+			}
+			created.transform.localScale = Vector3.one * 0.8f * screenWidth / width;
+		}
 		currentY = currentY + height;
 		if (currentY == height * sectorsNum)
 			currentY = 0;
+		
 	}
 
 	Square[,] GenerateSector()
@@ -68,7 +94,7 @@ public class Labyrinth {
 		for(int i = 0; i < height; i++){
 			for (int j = 0; j < width; j++) {
 				result [i, j] = Object.Instantiate (squarePrefab).GetComponent<Square> ();
-				result [i, j].Start ();
+				result [i, j].Init ();
 				result [i, j].transform.localScale = Vector3.one * screenWidth / width;
 				result [i, j].transform.position = currentPosition;
 				currentPosition += Vector3.right * screenWidth / width;
@@ -129,64 +155,54 @@ public class Labyrinth {
 	/// <returns><c>true</c> если можно<c>false</c> если нельзя</returns>
 	public bool CanGo(Square _from, Square _to)
 	{
-		bool res = Check (_from, _to);
-		int x = 0, xMax = 0, y = 0, yMax = 0;
-		if (_from.posX < _to.posX) {
-			x = _from.posX;
-			xMax = _to.posX;
-		} else {
-			xMax = _from.posX;
-			x = _to.posX;
-		}
-		if (_from.posY < _to.posY) {
-			y = _from.posY;
-			yMax = _to.posY;
-		} else {
-			yMax = _from.posY;
-			y = _to.posY;
-		}
-		for (int i = x; i <= xMax; i++) {
-			for (int j = y; j <= yMax; j++) {
-				float r = squareArray [j, i].GetComponent<SpriteRenderer> ().color.r;
-				if (r <= 0.75)
-					squareArray [j, i].GetComponent<SpriteRenderer> ().color = new Color (r + 0.25f, 0, 0);
-			}
-		}
-		return res;
-	}
-
-	private bool Check(Square _from, Square _to)
-	{
 		if (_from == _to)
 			return false;
+		bool b = true;
+		List<Square> colored = new List<Square>();
 		if (_from.posX == _to.posX) {
-			bool b = true;
-			if (_from.posY > _to.posY) {
-				for (int i = _to.posY; i < _from.posY - 1; i++) {
-					b = b && !squareArray [i, _from.posX].up && !squareArray [i+1, _from.posX].down;
-				}
+			int y = 0, yMax = 0;
+			if (_from.transform.position.y < _to.transform.position.y) {
+				y = _from.posY;
+				yMax = _to.posY;
 			} else {
-				for (int i = _from.posY; i < _from.posY - 1; i++) {
-					b = b && !squareArray [i, _from.posX].up && !squareArray [i+1, _from.posX].down;
-				}
+				y = _to.posY;
+				yMax = _from.posY;
 			}
-			return b;
+			while (y != yMax) {
+				int dy = y + 1;
+				if (dy == sectorsNum * height)
+					dy = 0;
+				b = b && !squareArray [y, _to.posX].up && !squareArray [dy, _to.posX].down;
+				colored.Add (squareArray [y, _to.posX]);
+				y = dy;
+			}
+			colored.Add(squareArray [yMax, _to.posX]);
+			colored.Remove (squareArray [_to.posY, _to.posX]);
 		}
-		if (_from.posY == _to.posY) {
-			bool b = true;
-			if (_from.posX > _to.posX) {
-				for (int i = _to.posX; i < _from.posX - 1; i++) {
-					b = b && !squareArray [_from.posY, i].right  && !squareArray [_from.posY, i+1].left;
-				}
+		if (_to.posY == _from.posY) {
+			int x = 0, xMax = 0;
+			if (_from.posX < _to.posX) {
+				x = _from.posX;
+				xMax = _to.posX;
 			} else {
-				for (int i = _from.posX; i < _from.posX - 1; i++) {
-					b = b && !squareArray [_from.posY, i].right  && !squareArray [_from.posY, i+1].left;
-				}
+				x = _to.posX;
+				xMax = _from.posX;
 			}
-			return b;
+			for (int i = x; i < xMax; i++) {
+				b = b && !squareArray [_to.posY, i].right && !squareArray [_to.posY, i + 1].left;
+				colored.Add (squareArray [_to.posY, i]);
+			}
+			colored.Add(squareArray [_to.posY, xMax]);
+			colored.Remove (squareArray [_to.posY, _to.posX]);
 		}
-		return false;
+		if (b) {
+			foreach (Square s in colored) {
+				s.GetComponent<SpriteRenderer> ().color -= new Color (0, 0.25f, 0.25f, 0f);
+			}
+		}
+		return b;
 	}
+
 
 	public void Move (Vector3 dir){
 		foreach (Square s in squareArray) {

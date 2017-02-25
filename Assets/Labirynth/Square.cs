@@ -18,7 +18,7 @@ public class Square : MonoBehaviour {
 	/// </summary>
 	public int posX;
 
-	public void Start(){
+	public void Init(){
 		up = right = down = left = true;
 		upLine = transform.Find ("upLine");
 		downLine = transform.Find ("downLine");
