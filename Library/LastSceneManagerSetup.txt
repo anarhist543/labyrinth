@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Tests/LabyrinthDemo.unity
+- path: Assets/Tests/Scenes/MainMenu.unity
   isLoaded: 1
   isActive: 1
