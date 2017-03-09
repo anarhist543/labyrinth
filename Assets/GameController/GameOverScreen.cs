@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class GameOverScreen : MonoBehaviour
 {
 	public Text scoreText;
+	public Text highScoreText;
 	public Text newRecordText;
 	private int offset;
 	RectTransform rect;
@@ -21,7 +22,9 @@ public class GameOverScreen : MonoBehaviour
 	{
 		offset = UI_HEIGHT;
 
-		scoreText.text = "YOUR SCORE IS\n" + GameController.Instance.GetScore();
+		scoreText.text = "YOUR SCORE IS\n" + GameController.Instance.GetScore() + " POINTS";
+
+		highScoreText.text = "HIGHSCORE IS\n" + PrefsGetSavedRecord() + " POINTS";
 
 		if (PrefsGetSavedRecord() < GameController.Instance.GetScore())
 		{
