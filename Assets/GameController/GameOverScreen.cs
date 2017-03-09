@@ -10,14 +10,16 @@ public class GameOverScreen : MonoBehaviour
 	private int offset;
 	RectTransform rect;
 
-	void Start ()
+	static int UI_HEIGHT = 1920;
+
+	void Awake ()
 	{
 		rect = GetComponent <RectTransform> ();
 	}
 
 	void OnEnable ()
 	{
-		offset = 1920;
+		offset = UI_HEIGHT;
 
 		scoreText.text = "YOUR SCORE IS\n" + GameController.Instance.GetScore();
 
@@ -30,12 +32,21 @@ public class GameOverScreen : MonoBehaviour
 
 		StartCoroutine(Coroutine1());
 	}
-		
+
+	/// <summary>
+	/// Функция, записывающая очки на момент вызова в память телефона
+	/// </summary>
 	void PrefsSaveRecord ()
 	{
+		if (GameController.Instance.GetScore() > PrefsGetSavedRecord()) // Добавлено для безопасности. Не нужно перезаписывать рекорд, если он меньше.
+		{
 		PlayerPrefs.SetInt("Highscore", GameController.Instance.GetScore());
+		}
 	}
 
+	/// <summary>
+	/// Функция, возвращающая записанное в памяти значение рекорда
+	/// </summary>
 	int PrefsGetSavedRecord ()
 	{
 		return PlayerPrefs.GetInt("Highscore");
@@ -43,41 +54,35 @@ public class GameOverScreen : MonoBehaviour
 
 	public IEnumerator Coroutine1 ()
 	{
+		int speed = 0;
+
 		while (offset > 0)
 		{
-			offset -= Mathf.Min(100, offset);
+			speed += 5;
+			offset -= Mathf.Min(speed, offset);
 			yield return new WaitForEndOfFrame();
 		}
-		StartCoroutine(Coroutine2());
+		if (speed-35 > 0) StartCoroutine(Coroutine2(speed-35));
 		yield return null;
 	}
 
-	public IEnumerator Coroutine2 ()
+	public IEnumerator Coroutine2 (int speed)
 	{
-		while (offset < 1000)
+		do
 		{
-			offset += 50;
+			speed -= 5;
+			offset += speed;
 			yield return new WaitForEndOfFrame();
 		}
-		StartCoroutine(Coroutine3());
-		yield return null;
-	}
-
-	public IEnumerator Coroutine3 ()
-	{
-		while (offset > 0)
-		{
-			offset -= Mathf.Min(20, offset);
-			yield return new WaitForEndOfFrame();
-		}
-		//StartCoroutine(Coroutine2()); De-comment for hillarious effect
+		while (offset > 0);
+		if (-speed - 15 > 0) StartCoroutine(Coroutine2(-speed - 15));
 		yield return null;
 	}
 
 	void Update ()
 	{
-		//GameController.Instance.GetPixelHeight()
 		rect.offsetMin = new Vector2 (rect.offsetMin.x, offset);
 		rect.offsetMax = new Vector2 (rect.offsetMin.x, offset);
+		// Данный кусок кода отвечает за сдвиг UI, каждый кадр устанавливая его на значение "offset"
 	}
 }
