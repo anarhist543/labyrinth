@@ -1,10 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
+using GoogleMobileAds.Api;
 
 public class GameController : MonoBehaviour
 {
+    InterstitialAd ad;
+    BannerView bannerV;
+
 	public Camera gameCamera;
 	public GameObject squarePrefab;
+    public GameObject endScreen;
 
 	public static GameController Instance;
 	public Labyrinth labyrinthInstance = new Labyrinth ();
@@ -29,14 +34,15 @@ public class GameController : MonoBehaviour
 	private float screenWidthUnits, screenWidthPixels;
 	public int passedSectorsOnStart;
 	public float speedOnstart;
+    public int adTimer;
+    private int adTime;
 
 	//This will be used for displaying main menu
 	private float opacityUI = 1f;
 	public float fadeOutTime;
 
 	private float timer;
-
-<<<<<<< HEAD:Assets/GameController/Scripts/GameController.cs
+    
 	public float SCORE_CONSTANT = 1f;
 
 	public void GetBall (GameObject _ball)
@@ -44,37 +50,33 @@ public class GameController : MonoBehaviour
 		ball = _ball;
 	}
 
-	void OnDrawGizmos ()
-	{
-		Vector3 bottomLeftCorner = gameCamera.ScreenToWorldPoint(new Vector3(0f, 0f, 10f));
-		Vector3 upperRightCorner = gameCamera.ScreenToWorldPoint(new Vector3(gameCamera.pixelWidth, gameCamera.pixelHeight, 10f));
-=======
-	private int PixelHeight;
->>>>>>> 09c184f936a69da24877debdcdc9fd225a1d1a7f:Assets/GameController/GameController.cs
-
-	static float SCORE_CONSTANT = 1f;
+    void OnDrawGizmos()
+    {
+        Vector3 bottomLeftCorner = gameCamera.ScreenToWorldPoint(new Vector3(0f, 0f, 10f));
+        Vector3 upperRightCorner = gameCamera.ScreenToWorldPoint(new Vector3(gameCamera.pixelWidth, gameCamera.pixelHeight, 10f));
+    }
 
 	void Init ()
 	{
+        adTime = adTimer;
 		Vector3 bottomLeftCorner = gameCamera.ScreenToWorldPoint(new Vector3(0f, 0f, 10f));
 		Vector3 upperRightCorner = gameCamera.ScreenToWorldPoint(new Vector3(gameCamera.pixelWidth, gameCamera.pixelHeight, 10f));
-
-<<<<<<< HEAD:Assets/GameController/Scripts/GameController.cs
+        
 		screenWidthUnits = -bottomLeftCorner.x + upperRightCorner.x;
 		screenHeightUnits = upperRightCorner.y - bottomLeftCorner.y;
 		screenWidthPixels = gameCamera.pixelWidth;
 		screenHeightPixels = gameCamera.pixelHeight;
-=======
-		PixelHeight = gameCamera.pixelHeight;
-
-		float screenWidthUnits = -bottomLeftCorner.x + upperRightCorner.x;
->>>>>>> 09c184f936a69da24877debdcdc9fd225a1d1a7f:Assets/GameController/GameController.cs
 		generateDistance = screenWidthUnits / gridWidth * gridHeight;
 		labyrinthInstance.SetParams (gridWidth, gridHeight, startingGenSectors, screenWidthUnits, squarePrefab, bottomLeftCorner); 
 		for (int i = 0; i < startingGenSectors; i++) {
 			labyrinthInstance.GenerateNextSector ();
-		}
-	}
+        }
+        bannerV = new BannerView("ca-app-pub-5377701829054453/7844227328", AdSize.Banner, AdPosition.Bottom);
+        AdRequest request1 = new AdRequest.Builder().Build();
+        bannerV.LoadAd(request1);
+        bannerV.Show();
+
+    }
 
 	public int GetScore ()
 	{
@@ -88,7 +90,7 @@ public class GameController : MonoBehaviour
 
 	public int GetPixelHeight ()
 	{
-		return PixelHeight;
+		return (int)screenHeightPixels;
 	}
 
 	void Awake ()
@@ -123,8 +125,8 @@ public class GameController : MonoBehaviour
 	void MainMenuScrollingBackground ()
 	{
 		currentSpeed = startingSpeed;
-		labyrinthInstance.Move (Vector3.down * currentSpeed * Time.deltaTime);
-		currentDistance += currentSpeed * Time.deltaTime;
+		labyrinthInstance.Move (Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime);
+		currentDistance += currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
 
 		if (currentDistance >= generateDistance)
 		{
@@ -138,19 +140,22 @@ public class GameController : MonoBehaviour
 		if (isPlaying || isCourutineActive)
 			return;
 		isCourutineActive = true;
-		labyrinthInstance.GenerateBall (passedSectorsOnStart - 3, ballPrefab);
-		StartCoroutine(StartingMove(0f, passedSectorsOnStart*generateDistance - currentDistance - generateDistance /gridHeight - HeightPixelsToUnits(50)));
-		score = 0;
+        labyrinthInstance.GenerateBall (passedSectorsOnStart - 3, ballPrefab);
+        StartCoroutine(StartingMove(0f, passedSectorsOnStart * generateDistance - currentDistance - generateDistance / gridHeight - HeightPixelsToUnits(adsPixelSize)));
+        score = 0;
 		timer = 0;
-
-	}
+        if (adTime <= 0)
+        {
+            ad = new InterstitialAd("ca-app-pub-5377701829054453/4751160121");
+            AdRequest request = new AdRequest.Builder().Build();
+            ad.LoadAd(request);
+        }
+    }
 
 	public IEnumerator StartingMove (float a, float b) //currentDistance - generateDistance?
 	{
 		while (a < b)
 		{
-			Debug.Log ("active");
-
 			float completion = 1f - a / b;
 
 			if (ball != null)
@@ -169,9 +174,9 @@ public class GameController : MonoBehaviour
 
 			opacityUI = completion;
 
-			yield return null;
-		}
-		StartCoroutine (Countdown (3));
+            yield return null;
+        }
+        StartCoroutine (Countdown (3));
 	}
 
 	IEnumerator Countdown(int c)
@@ -181,9 +186,8 @@ public class GameController : MonoBehaviour
 			c--;
 			yield return new WaitForSeconds (1f);
 		}
-		Debug.Log ("Started");
 		isCourutineActive = false;
-		isPlaying = true;
+        isPlaying = true;
 	}
 
 	public bool CanGo(Square _from, Square _to)
@@ -198,19 +202,35 @@ public class GameController : MonoBehaviour
 		currentSpeed += acceleration * Time.deltaTime;
 
 		if (ball != null)
-			ball.transform.position += Vector3.down * currentSpeed * Time.deltaTime;
-		labyrinthInstance.Move (Vector3.down * currentSpeed * Time.deltaTime);
-		currentDistance += currentSpeed * Time.deltaTime;
+			ball.transform.position += Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
+		labyrinthInstance.Move (Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime);
+		currentDistance += currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
 		score += currentSpeed * Time.deltaTime * SCORE_CONSTANT;
-
-		Debug.Log(score);
 
 		if (currentDistance >= generateDistance)
 		{
 			currentDistance -= generateDistance;
 			labyrinthInstance.GenerateNextSector ();
-		}
-	}
+        }
+        if (ball.transform.position.y < gameCamera.ScreenToWorldPoint(Vector3.zero).y)
+        {
+            Destroy(ball);
+            if (adTime <= 0)
+            {
+                while (!ad.IsLoaded())
+                {
+
+                }
+                ad.Show();
+                adTime = adTimer;
+            }
+            else
+                adTime--;
+            endScreen.SetActive(true);
+            isPlaying = false;
+            opacityUI = 1f;
+        }
+    }
 
 	float HeightPixelsToUnits(int pixels)
 	{

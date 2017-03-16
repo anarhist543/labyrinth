@@ -22,9 +22,9 @@ public class GameOverScreen : MonoBehaviour
 	{
 		offset = UI_HEIGHT;
 
-		scoreText.text = "YOUR SCORE IS\n" + GameController.Instance.GetScore() + " POINTS";
+		scoreText.text = "YOUR SCORE\n" + GameController.Instance.GetScore();
 
-		highScoreText.text = "HIGHSCORE IS\n" + PrefsGetSavedRecord() + " POINTS";
+		highScoreText.text = "RECORD\n" + PrefsGetSavedRecord();
 
 		if (PrefsGetSavedRecord() < GameController.Instance.GetScore())
 		{
@@ -33,7 +33,10 @@ public class GameOverScreen : MonoBehaviour
 		}
 		else newRecordText.text = " ";
 
-		StartCoroutine(Coroutine1());
+        rect.offsetMin = new Vector2(rect.offsetMin.x, offset);
+        rect.offsetMax = new Vector2(rect.offsetMin.x, offset);
+
+        StartCoroutine(Coroutine1());
 	}
 
 	/// <summary>
@@ -43,7 +46,7 @@ public class GameOverScreen : MonoBehaviour
 	{
 		if (GameController.Instance.GetScore() > PrefsGetSavedRecord()) // Добавлено для безопасности. Не нужно перезаписывать рекорд, если он меньше.
 		{
-		PlayerPrefs.SetInt("Highscore", GameController.Instance.GetScore());
+		    PlayerPrefs.SetInt("Highscore", GameController.Instance.GetScore());
 		}
 	}
 
@@ -83,9 +86,9 @@ public class GameOverScreen : MonoBehaviour
 	}
 
 	void Update ()
-	{
-		rect.offsetMin = new Vector2 (rect.offsetMin.x, offset);
-		rect.offsetMax = new Vector2 (rect.offsetMin.x, offset);
-		// Данный кусок кода отвечает за сдвиг UI, каждый кадр устанавливая его на значение "offset"
-	}
+    {
+        rect.offsetMin = new Vector2(rect.offsetMin.x, offset);
+        rect.offsetMax = new Vector2(rect.offsetMin.x, offset);
+        // Данный кусок кода отвечает за сдвиг UI, каждый кадр устанавливая его на значение "offset"
+    }
 }

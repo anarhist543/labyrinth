@@ -1,8 +1,0 @@
-sceneSetups:
-<<<<<<< HEAD
-- path: Assets/GameController/Scenes/MainMenu.unity
-=======
-- path: Assets/GameController/MainMenu.unity
->>>>>>> 09c184f936a69da24877debdcdc9fd225a1d1a7f
-  isLoaded: 1
-  isActive: 1
