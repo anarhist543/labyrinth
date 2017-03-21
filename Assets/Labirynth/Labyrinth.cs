@@ -155,8 +155,12 @@ public class Labyrinth {
 	/// <returns><c>true</c> если можно<c>false</c> если нельзя</returns>
 	public bool CanGo(Square _from, Square _to)
 	{
-		if (_from == _to)
-			return false;
+        if (_from == _to)
+            return false;
+        if ((_from.posX != _to.posX && _to.posY != _from.posY))
+        {
+            return false;
+        }
 		bool b = true;
 		List<Square> colored = new List<Square>();
 		if (_from.posX == _to.posX) {

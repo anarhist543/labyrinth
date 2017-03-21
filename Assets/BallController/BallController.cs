@@ -17,20 +17,8 @@ public class BallController : MonoBehaviour {
 	}
 
     void Update() {
-
-        InputController();
-        
-        //Чтобы двигался только по прямым
-        while (squareList.Count > 1 && 
-                    squareList[1].transform.position.x != squareList[0].transform.position.x &&
-                    squareList[1].transform.position.y != squareList[0].transform.position.y) {
-                squareList.RemoveAt(1);
-
-            //если нажал не по прямой то произойдет удаление, чтоб цикл обращался списку с индесом один без ошибки
-            if (squareList.Count < 1)
-                squareList[1] = squareList[0];
-
-        }
+        if(!GameController.Instance.paused)
+            InputController();
 
         //Само движение кружка
         if ((Mathf.Abs(squareList[0].transform.position.x - transform.position.x) > speed * Time.deltaTime) ||
@@ -80,7 +68,7 @@ public class BallController : MonoBehaviour {
 		#endif
     }
 
-    public Square GetSquareLastTap(List<Square> squareList) {
+    public Square GetSquareLastTap() {
         return squareList[squareList.Count - 1];
     }
 }

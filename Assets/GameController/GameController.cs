@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using GoogleMobileAds.Api;
 
@@ -10,6 +11,11 @@ public class GameController : MonoBehaviour
 	public Camera gameCamera;
 	public GameObject squarePrefab;
     public GameObject endScreen;
+    public GameObject menuScreen;
+    public GameObject gameCanvas;
+    public PauseBuilder pause;
+    [HideInInspector]
+    public bool paused;
 
 	public static GameController Instance;
 	public Labyrinth labyrinthInstance = new Labyrinth ();
@@ -44,6 +50,41 @@ public class GameController : MonoBehaviour
 	private float timer;
     
 	public float SCORE_CONSTANT = 1f;
+
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+            if(isPlaying || isCourutineActive)
+                Pause();
+    }
+
+    void OnApplicationPause(bool pauseStatus)
+    {
+        if(pauseStatus)
+            if(isPlaying || isCourutineActive)
+                Pause();
+    }
+
+    public void Pause()
+    {
+        if (!paused)
+        {
+            pause.BuildPause();
+            paused = true;
+        }
+    }
+
+    public void Resume()
+    {
+        pause.Resume();
+        StartCoroutine(Unpause());
+    }
+
+    IEnumerator Unpause()
+    {
+        yield return null;
+        paused = false;
+    }
 
 	public void GetBall (GameObject _ball)
 	{
@@ -112,14 +153,27 @@ public class GameController : MonoBehaviour
 		isPlaying = false;
 	}
 
-	void Update ()
-	{
-		if (isCourutineActive) 
-		{
-			//do nothing (?)
-		}
-		else if (isPlaying) MainPlayLoop ();
-		else MainMenuScrollingBackground ();
+    void Update()
+    {
+        if (isCourutineActive)
+        {
+            if (paused)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    Pause();
+                }
+            }
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    Resume();
+                }
+            }
+        }
+        else if (isPlaying) MainPlayLoop();
+        else MainMenuScrollingBackground();
 	}
 
 	void MainMenuScrollingBackground ()
@@ -133,6 +187,18 @@ public class GameController : MonoBehaviour
 			currentDistance -= generateDistance;
 			labyrinthInstance.GenerateNextSector ();
 		}
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if(endScreen.activeInHierarchy)
+            {
+                menuScreen.SetActive(true);
+                endScreen.SetActive(false);
+            } else
+            if(menuScreen.activeInHierarchy)
+            {
+                Application.Quit();
+            }
+        }
 	}
 
 	public void GameStart ()
@@ -144,36 +210,41 @@ public class GameController : MonoBehaviour
         StartCoroutine(StartingMove(0f, passedSectorsOnStart * generateDistance - currentDistance - generateDistance / gridHeight - HeightPixelsToUnits(adsPixelSize)));
         score = 0;
 		timer = 0;
-        if (adTime <= 0)
+        if (adTime == adTimer)
         {
             ad = new InterstitialAd("ca-app-pub-5377701829054453/4751160121");
             AdRequest request = new AdRequest.Builder().Build();
             ad.LoadAd(request);
         }
+        menuScreen.GetComponent<GraphicRaycaster>().enabled = false;
+        endScreen.GetComponent<GraphicRaycaster>().enabled = false;
+        gameCanvas.SetActive(true);
     }
 
 	public IEnumerator StartingMove (float a, float b) //currentDistance - generateDistance?
 	{
 		while (a < b)
 		{
-			float completion = 1f - a / b;
+            if (!paused)
+            {
+                float completion = 1f - a / b;
 
-			if (ball != null)
-				ball.transform.position += Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f);
+                if (ball != null)
+                    ball.transform.position += Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f);
 
-			labyrinthInstance.Move (Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f));
-			currentDistance += speedOnstart * completion * Time.deltaTime + 0.5f;
+                labyrinthInstance.Move(Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f));
+                currentDistance += speedOnstart * completion * Time.deltaTime + 0.5f;
 
-			if (currentDistance >= generateDistance)
-			{
-				currentDistance -= generateDistance;
-				labyrinthInstance.GenerateNextSector ();
-			}
+                if (currentDistance >= generateDistance)
+                {
+                    currentDistance -= generateDistance;
+                    labyrinthInstance.GenerateNextSector();
+                }
 
-			a += speedOnstart * completion * Time.deltaTime + 0.5f;
+                a += speedOnstart * completion * Time.deltaTime + 0.5f;
 
-			opacityUI = completion;
-
+                opacityUI = completion;
+            }
             yield return null;
         }
         StartCoroutine (Countdown (3));
@@ -182,8 +253,11 @@ public class GameController : MonoBehaviour
 	IEnumerator Countdown(int c)
 	{
 		while (c > 0) {
-			score = c;
-			c--;
+            if (!paused)
+            {
+                score = c;
+                c--;
+            }
 			yield return new WaitForSeconds (1f);
 		}
 		isCourutineActive = false;
@@ -197,39 +271,57 @@ public class GameController : MonoBehaviour
 
 	void MainPlayLoop ()
 	{
-		timePassedGame += Time.deltaTime;
-
-		currentSpeed += acceleration * Time.deltaTime;
-
-		if (ball != null)
-			ball.transform.position += Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
-		labyrinthInstance.Move (Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime);
-		currentDistance += currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
-		score += currentSpeed * Time.deltaTime * SCORE_CONSTANT;
-
-		if (currentDistance >= generateDistance)
-		{
-			currentDistance -= generateDistance;
-			labyrinthInstance.GenerateNextSector ();
-        }
-        if (ball.transform.position.y < gameCamera.ScreenToWorldPoint(Vector3.zero).y)
+        if (!paused)
         {
-            Destroy(ball);
-            if (adTime <= 0)
-            {
-                while (!ad.IsLoaded())
-                {
+            timePassedGame += Time.deltaTime;
 
-                }
-                ad.Show();
-                adTime = adTimer;
+            currentSpeed += acceleration * Time.deltaTime;
+
+            if (ball != null)
+                ball.transform.position += Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
+            labyrinthInstance.Move(Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime);
+            currentDistance += currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
+            score += currentSpeed * Time.deltaTime * SCORE_CONSTANT;
+
+            if (currentDistance >= generateDistance)
+            {
+                currentDistance -= generateDistance;
+                labyrinthInstance.GenerateNextSector();
             }
-            else
-                adTime--;
-            endScreen.SetActive(true);
-            isPlaying = false;
-            opacityUI = 1f;
+            if (ball.GetComponent<BallController>().GetSquareLastTap().transform.position.y < gameCamera.ScreenToWorldPoint(Vector3.zero).y)
+            {
+                Lose();
+            }
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Pause();
+            }
         }
+        else
+        {
+            if(Input.GetKeyDown(KeyCode.Escape))
+            {
+                Resume();
+            }
+        }
+    }
+
+    void Lose()
+    {
+        menuScreen.GetComponent<GraphicRaycaster>().enabled = true;
+        endScreen.GetComponent<GraphicRaycaster>().enabled = true;
+        Destroy(ball);
+        if (adTime <= 0)
+        {
+            ad.Show();
+            adTime = adTimer;
+        }
+        else
+            adTime--;
+        endScreen.SetActive(true);
+        isPlaying = false;
+        opacityUI = 1f;
+        gameCanvas.SetActive(false);
     }
 
 	float HeightPixelsToUnits(int pixels)
