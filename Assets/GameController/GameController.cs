@@ -25,7 +25,7 @@ public class GameController : MonoBehaviour
 	private float currentSpeed;
 	private float generateDistance;
 	private float currentDistance = 0;
-	private float score;
+	private float score = 0; //Edited, was without " = 0"
 	private float timePassedGame;
 	private bool isPlaying;
 	private bool isCourutineActive = false;

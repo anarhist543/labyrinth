@@ -5,22 +5,43 @@ using UnityEngine.UI;
 
 public class GameOverScreen : MonoBehaviour
 {
+	public bool LimitBounces = true;
 	public Text scoreText;
 	public Text highScoreText;
 	public Text newRecordText;
+	public GameObject ratePanel;
 	private int offset;
+	private int bounceTimes;
+	private int loseCount = 0;
+	public int bounceLimit = 1;
 	RectTransform rect;
+	public RectTransform RateUsRect;
 
 	static int UI_HEIGHT = 1920;
+	static int GAMES_TO_RATE = 5;
 
 	void Awake ()
 	{
 		rect = GetComponent <RectTransform> ();
 	}
 
+	void OnDisable ()
+	{
+		ratePanel.SetActive(false);
+	}
+
 	void OnEnable ()
 	{
+		Debug.Log(PlayerPrefs.GetInt("RateTimer"));
+		if (PlayerPrefs.GetInt("RateTimer") < 0)
+			PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
+		else
+			PlayerPrefs.SetInt("RateTimer", PlayerPrefs.GetInt("RateTimer") - 1);
+		
+		RateUsRect.anchoredPosition = new Vector2 (0,RateUsRect.anchoredPosition.y); //reset the x position
+
 		offset = UI_HEIGHT;
+		bounceTimes = 0;
 
 		scoreText.text = "YOUR SCORE\n" + GameController.Instance.GetScore();
 
@@ -35,6 +56,10 @@ public class GameOverScreen : MonoBehaviour
 
         rect.offsetMin = new Vector2(rect.offsetMin.x, offset);
         rect.offsetMax = new Vector2(rect.offsetMin.x, offset);
+
+		loseCount++;
+		if ((PlayerPrefs.GetInt("RateTimer") == 0) && (PlayerPrefs.GetInt("Rated") != 1))
+			ratePanel.SetActive(true);
 
         StartCoroutine(Coroutine1());
 	}
@@ -56,6 +81,33 @@ public class GameOverScreen : MonoBehaviour
 	int PrefsGetSavedRecord ()
 	{
 		return PlayerPrefs.GetInt("Highscore");
+	}
+
+	public void OpenMarket ()
+	{
+		Debug.Log("Opened");
+		ratePanel.SetActive(false);
+		PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
+		PlayerPrefs.SetInt("Rated", 1);
+		Application.OpenURL("market://details?id=com.gameloft.android.ANMP.GloftPOHM");
+	}
+
+	public void DontOpenMarket ()
+	{
+		Debug.Log("Not Opened");
+		PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
+		StartCoroutine(RateUsSlideOff());
+	}
+
+	public IEnumerator RateUsSlideOff ()
+	{
+		while (RateUsRect.anchoredPosition.x < 1000)
+		{
+			RateUsRect.anchoredPosition += new Vector2 (7000*Time.deltaTime,0);
+			yield return new WaitForEndOfFrame();
+		}
+		ratePanel.SetActive(false);
+		yield return null;
 	}
 
 	public IEnumerator Coroutine1 ()
@@ -81,7 +133,8 @@ public class GameOverScreen : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 		}
 		while (offset > 0);
-		if (-speed - 15 > 0) StartCoroutine(Coroutine2(-speed - 15));
+		bounceTimes++;
+		if ((-speed - 15 > 0)&(LimitBounces ? (bounceTimes <= bounceLimit) : true)) StartCoroutine(Coroutine2(-speed - 15));
 		yield return null;
 	}
 
