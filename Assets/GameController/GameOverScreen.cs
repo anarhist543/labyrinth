@@ -16,6 +16,7 @@ public class GameOverScreen : MonoBehaviour
 	public int bounceLimit = 1;
 	RectTransform rect;
 	public RectTransform RateUsRect;
+    public GameObject rateButton;
 
 	static int UI_HEIGHT = 1920;
 	static int GAMES_TO_RATE = 5;
@@ -32,11 +33,16 @@ public class GameOverScreen : MonoBehaviour
 
 	void OnEnable ()
 	{
-		Debug.Log(PlayerPrefs.GetInt("RateTimer"));
-		if (PlayerPrefs.GetInt("RateTimer") < 0)
-			PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
-		else
-			PlayerPrefs.SetInt("RateTimer", PlayerPrefs.GetInt("RateTimer") - 1);
+        PlayerPrefs.SetInt("Rated", 0);
+
+        Debug.Log(PlayerPrefs.GetInt("RateTimer"));
+        if (PlayerPrefs.GetInt("RateTimer") <= 0 && PlayerPrefs.GetInt("Rated") != 1)
+        {
+            ratePanel.SetActive(true);
+            PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
+        }
+        else
+            PlayerPrefs.SetInt("RateTimer", PlayerPrefs.GetInt("RateTimer") - 1);
 		
 		RateUsRect.anchoredPosition = new Vector2 (0,RateUsRect.anchoredPosition.y); //reset the x position
 
@@ -87,7 +93,6 @@ public class GameOverScreen : MonoBehaviour
 	{
 		Debug.Log("Opened");
 		ratePanel.SetActive(false);
-		PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
 		PlayerPrefs.SetInt("Rated", 1);
 		Application.OpenURL("market://details?id=com.gameloft.android.ANMP.GloftPOHM");
 	}
@@ -95,7 +100,6 @@ public class GameOverScreen : MonoBehaviour
 	public void DontOpenMarket ()
 	{
 		Debug.Log("Not Opened");
-		PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
 		StartCoroutine(RateUsSlideOff());
 	}
 
