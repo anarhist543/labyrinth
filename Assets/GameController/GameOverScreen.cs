@@ -33,8 +33,10 @@ public class GameOverScreen : MonoBehaviour
 
 	void OnEnable ()
 	{
-        PlayerPrefs.SetInt("Rated", 0);
-
+        if(PlayerPrefs.GetInt("RateTimer", -100000) == -100000)
+        {
+            PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
+        }
         Debug.Log(PlayerPrefs.GetInt("RateTimer"));
         if (PlayerPrefs.GetInt("RateTimer") <= 0 && PlayerPrefs.GetInt("Rated") != 1)
         {
@@ -64,8 +66,6 @@ public class GameOverScreen : MonoBehaviour
         rect.offsetMax = new Vector2(rect.offsetMin.x, offset);
 
 		loseCount++;
-		if ((PlayerPrefs.GetInt("RateTimer") == 0) && (PlayerPrefs.GetInt("Rated") != 1))
-			ratePanel.SetActive(true);
 
         StartCoroutine(Coroutine1());
 	}

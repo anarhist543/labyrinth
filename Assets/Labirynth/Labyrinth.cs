@@ -23,6 +23,10 @@ public class Labyrinth {
 		creationObject = prefab;
 	}
 
+    public Square GetSquare(int x, int y)
+    {
+        return squareArray[y, x];
+    }
 
 	/// <summary>
 	/// Функция задающая параметры лабиринта

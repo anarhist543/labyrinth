@@ -14,6 +14,11 @@ public class GameController : MonoBehaviour
     public GameObject menuScreen;
     public GameObject gameCanvas;
     public PauseBuilder pause;
+    public Image introImage;
+    public float introTime;
+    public float fadeTime;
+    private float currentFadeTime;
+    bool introFlag, introEnd, fadeIntro;
     [HideInInspector]
     public bool paused;
 
@@ -116,6 +121,7 @@ public class GameController : MonoBehaviour
         AdRequest request1 = new AdRequest.Builder().Build();
         bannerV.LoadAd(request1);
         bannerV.Show();
+        isPlaying = false;
 
     }
 
@@ -149,13 +155,17 @@ public class GameController : MonoBehaviour
 
 	void Start ()
 	{
-		Init();
-		isPlaying = false;
+        introFlag = false;
+        introEnd = false;
+        fadeIntro = true;
+        currentFadeTime = fadeTime;
 	}
 
     void Update()
     {
-        if (isCourutineActive)
+        if (!introEnd)
+            IntroLoop();
+        else if (isCourutineActive)
         {
             if (paused)
             {
@@ -175,6 +185,52 @@ public class GameController : MonoBehaviour
         else if (isPlaying) MainPlayLoop();
         else MainMenuScrollingBackground();
 	}
+
+    void IntroLoop()
+    {
+        if (fadeIntro)
+        {
+            currentFadeTime -= Time.deltaTime;
+            float a = currentFadeTime / fadeTime;
+            if (currentFadeTime > 0)
+            {
+                if (!introFlag)
+                {
+                    introImage.color = new Color(1 - a, 1 - a, 1 - a, 1);
+                }
+                else
+                {
+                    introImage.color = new Color(1, 1, 1, a);
+                }
+            }
+            else
+            {
+                if (!introFlag)
+                {
+                    introImage.color = new Color(1, 1, 1, 1);
+                    Init();
+                    introFlag = true;
+                    fadeIntro = false;
+                    introTime += currentFadeTime;
+                }
+                else
+                {
+                    introEnd = true;
+                    introImage.transform.parent.gameObject.SetActive(false);
+                }
+            }
+        }
+        else
+        {
+            introTime -= Time.deltaTime;
+            if(introTime<=0)
+            {
+                fadeIntro = true;
+                currentFadeTime = fadeTime;
+
+            }
+        }
+    }
 
 	void MainMenuScrollingBackground ()
 	{
@@ -230,7 +286,7 @@ public class GameController : MonoBehaviour
                 float completion = 1f - a / b;
 
                 if (ball != null)
-                    ball.transform.position += Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f);
+                    ball.GetComponent<BallController>().Move(Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f));
 
                 labyrinthInstance.Move(Vector3.down * (speedOnstart * completion * Time.deltaTime + 0.5f));
                 currentDistance += speedOnstart * completion * Time.deltaTime + 0.5f;
@@ -278,7 +334,7 @@ public class GameController : MonoBehaviour
             currentSpeed += acceleration * Time.deltaTime;
 
             if (ball != null)
-                ball.transform.position += Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
+                ball.GetComponent<BallController>().Move(Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime);
             labyrinthInstance.Move(Vector3.down * currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime);
             currentDistance += currentSpeed / gridWidth * screenWidthUnits * Time.deltaTime;
             score += currentSpeed * Time.deltaTime * SCORE_CONSTANT;
