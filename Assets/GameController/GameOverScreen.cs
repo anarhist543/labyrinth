@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,7 +36,7 @@ public class GameOverScreen : MonoBehaviour
         {
             PlayerPrefs.SetInt("RateTimer", GAMES_TO_RATE);
         }
-        Debug.Log(PlayerPrefs.GetInt("RateTimer"));
+        Debug.Log(PlayerPrefs.GetInt("Rated"));
         if (PlayerPrefs.GetInt("RateTimer") <= 0 && PlayerPrefs.GetInt("Rated") != 1)
         {
             ratePanel.SetActive(true);
@@ -107,7 +106,7 @@ public class GameOverScreen : MonoBehaviour
 	{
 		while (RateUsRect.anchoredPosition.x < 1000)
 		{
-			RateUsRect.anchoredPosition += new Vector2 (7000*Time.deltaTime,0);
+			RateUsRect.anchoredPosition += new Vector2 (1400*Time.deltaTime,0);
 			yield return new WaitForEndOfFrame();
 		}
 		ratePanel.SetActive(false);
@@ -120,11 +119,11 @@ public class GameOverScreen : MonoBehaviour
 
 		while (offset > 0)
 		{
-			speed += 5;
+			speed += 15;
 			offset -= Mathf.Min(speed, offset);
 			yield return new WaitForEndOfFrame();
 		}
-		if (speed-35 > 0) StartCoroutine(Coroutine2(speed-35));
+        if (speed > 10) StartCoroutine(Coroutine2(speed / 2));
 		yield return null;
 	}
 
@@ -132,13 +131,13 @@ public class GameOverScreen : MonoBehaviour
 	{
 		do
 		{
-			speed -= 5;
-			offset += speed;
+			speed -= 15;
+			offset += offset + speed < 0 ? -offset : speed;
 			yield return new WaitForEndOfFrame();
 		}
 		while (offset > 0);
 		bounceTimes++;
-		if ((-speed - 15 > 0)&(LimitBounces ? (bounceTimes <= bounceLimit) : true)) StartCoroutine(Coroutine2(-speed - 15));
+        if ((-speed - 15 > 0) & (LimitBounces ? (bounceTimes <= bounceLimit) : true)) StartCoroutine(Coroutine2(-speed - 25));
 		yield return null;
 	}
 

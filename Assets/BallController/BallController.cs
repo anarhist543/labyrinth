@@ -9,6 +9,7 @@ public class BallController : MonoBehaviour {
     RaycastHit hit;
     List<Vector3> squareList;
     Square squareOne, squareTwo;
+    Vector3 lastTap;
 
 	public void Init(Square s){
 		GameController.Instance.GetBall (gameObject);
@@ -28,7 +29,7 @@ public class BallController : MonoBehaviour {
     }
 
     void Update() {
-        if(!GameController.Instance.paused)
+        if(!GameController.Instance.paused && GameController.Instance.started)
             InputController();
 
         //Само движение кружка
@@ -110,9 +111,13 @@ public class BallController : MonoBehaviour {
                 }
             }
 #endif
+        if (squareTwo != null)
+        {
+            lastTap = squareTwo.transform.position;
+        }
     }
 
-    public Square GetSquareLastTap() {
-        return squareTwo;
+    public Vector3 GetSquareLastTap() {
+        return lastTap;
     }
 }

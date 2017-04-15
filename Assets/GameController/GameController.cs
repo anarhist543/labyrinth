@@ -21,6 +21,7 @@ public class GameController : MonoBehaviour
     bool introFlag, introEnd, fadeIntro;
     [HideInInspector]
     public bool paused;
+    public bool started;
 
 	public static GameController Instance;
 	public Labyrinth labyrinthInstance = new Labyrinth ();
@@ -262,6 +263,7 @@ public class GameController : MonoBehaviour
 		if (isPlaying || isCourutineActive)
 			return;
 		isCourutineActive = true;
+        started = false;
         labyrinthInstance.GenerateBall (passedSectorsOnStart - 3, ballPrefab);
         StartCoroutine(StartingMove(0f, passedSectorsOnStart * generateDistance - currentDistance - generateDistance / gridHeight - HeightPixelsToUnits(adsPixelSize)));
         score = 0;
@@ -303,6 +305,7 @@ public class GameController : MonoBehaviour
             }
             yield return null;
         }
+        started = true;
         StartCoroutine (Countdown (3));
 	}
 
@@ -344,7 +347,7 @@ public class GameController : MonoBehaviour
                 currentDistance -= generateDistance;
                 labyrinthInstance.GenerateNextSector();
             }
-            if (ball.GetComponent<BallController>().GetSquareLastTap().transform.position.y < gameCamera.ScreenToWorldPoint(Vector3.zero).y)
+            if (ball.GetComponent<BallController>().GetSquareLastTap().y < gameCamera.ScreenToWorldPoint(Vector3.zero).y)
             {
                 Lose();
             }
