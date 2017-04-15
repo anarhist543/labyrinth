@@ -53,9 +53,29 @@ public class GameController : MonoBehaviour
 	private float opacityUI = 1f;
 	public float fadeOutTime;
 
+	private AudioSource audioSource;
+	public float musicSpeedupPercent = 0.05f;
+	// List of all music
+	public AudioClip genericLoop;
+	//
+
 	private float timer;
     
 	public float SCORE_CONSTANT = 1f;
+
+	public void PlayMusic (AudioClip clipToPlay)
+	{
+		audioSource.clip = clipToPlay;
+		audioSource.Play();
+	}
+
+	public void ToggleMute ()
+	{
+		if (audioSource.mute)
+			audioSource.mute = false;
+		else
+			audioSource.mute = true;
+	}
 
     void OnApplicationFocus(bool hasFocus)
     {
@@ -105,6 +125,8 @@ public class GameController : MonoBehaviour
 
 	void Init ()
 	{
+		PlayMusic(genericLoop);
+
         adTime = adTimer;
 		Vector3 bottomLeftCorner = gameCamera.ScreenToWorldPoint(new Vector3(0f, 0f, 10f));
 		Vector3 upperRightCorner = gameCamera.ScreenToWorldPoint(new Vector3(gameCamera.pixelWidth, gameCamera.pixelHeight, 10f));
@@ -152,6 +174,7 @@ public class GameController : MonoBehaviour
 			Instance = this;
 			DontDestroyOnLoad (gameObject);
 		}
+		audioSource = GetComponent<AudioSource>();
 	}
 
 	void Start ()
@@ -332,6 +355,9 @@ public class GameController : MonoBehaviour
 	{
         if (!paused)
         {
+			audioSource.pitch = Mathf.Lerp (1, currentSpeed / startingSpeed, musicSpeedupPercent);
+			Debug.Log("Audio pitch is currently" + audioSource.pitch.ToString());
+
             timePassedGame += Time.deltaTime;
 
             currentSpeed += acceleration * Time.deltaTime;
@@ -367,6 +393,9 @@ public class GameController : MonoBehaviour
 
     void Lose()
     {
+		audioSource.pitch = 1;
+		Debug.Log("Game loss. Audio pitch is currently " + audioSource.pitch.ToString());
+
         menuScreen.GetComponent<GraphicRaycaster>().enabled = true;
         endScreen.GetComponent<GraphicRaycaster>().enabled = true;
         Destroy(ball);
@@ -381,6 +410,7 @@ public class GameController : MonoBehaviour
         isPlaying = false;
         opacityUI = 1f;
         gameCanvas.SetActive(false);
+
     }
 
 	float HeightPixelsToUnits(int pixels)
