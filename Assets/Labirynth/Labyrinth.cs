@@ -156,7 +156,7 @@ public class Labyrinth {
 	/// Проверяет можно ли безприпятственно пройти из квадрата _from в квадрат _to
 	/// </summary>
 	/// <returns><c>true</c> если можно<c>false</c> если нельзя</returns>
-	public bool CanGo(Square _from, Square _to)
+	public bool CanGo(Square _from, Square _to, bool boolColor)
 	{
         if (_from == _to)
             return false;
@@ -202,7 +202,7 @@ public class Labyrinth {
 			colored.Add(squareArray [_to.posY, xMax]);
 			colored.Remove (squareArray [_to.posY, _to.posX]);
 		}
-		if (b) {
+		if (b && boolColor) {
 			foreach (Square s in colored) {
 				s.GetComponent<SpriteRenderer> ().color -= new Color (0, 0.25f, 0.25f, 0f);
 			}

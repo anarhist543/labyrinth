@@ -58,7 +58,7 @@ public class Square : MonoBehaviour {
 	{
 		if (right) {
 			right = false;
-			Destroy (rightLine.gameObject);
+			DestroyImmediate (rightLine.gameObject);
 		}
 	}
 
@@ -69,7 +69,7 @@ public class Square : MonoBehaviour {
 	{
 		if (left) {
 			left = false;
-			Destroy (leftLine.gameObject);
+            DestroyImmediate(leftLine.gameObject);
 		}
 	}
 
@@ -80,7 +80,7 @@ public class Square : MonoBehaviour {
 	{
 		if (up) {
 			up = false;
-			Destroy (upLine.gameObject);
+            DestroyImmediate(upLine.gameObject);
 		}
 	}
 
@@ -91,7 +91,7 @@ public class Square : MonoBehaviour {
 	{
 		if (down) {
 			down = false;
-			Destroy (downLine.gameObject);
+            DestroyImmediate(downLine.gameObject);
 		}
 	}
 

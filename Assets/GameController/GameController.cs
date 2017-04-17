@@ -54,7 +54,10 @@ public class GameController : MonoBehaviour
 	public float fadeOutTime;
 
 	private AudioSource audioSource;
+    public Image gameSoundButton;
+    public Text menuSoundButtonText;
 	public float musicSpeedupPercent = 0.05f;
+    public Sprite soundOn, soundOff;
 	// List of all music
 	public AudioClip genericLoop;
 	//
@@ -71,10 +74,18 @@ public class GameController : MonoBehaviour
 
 	public void ToggleMute ()
 	{
-		if (audioSource.mute)
-			audioSource.mute = false;
-		else
-			audioSource.mute = true;
+        if (audioSource.mute)
+        {
+            audioSource.mute = false;
+            menuSoundButtonText.text = "on";
+            gameSoundButton.sprite = soundOn;
+        }
+        else
+        {
+            menuSoundButtonText.text = "off";
+            gameSoundButton.sprite = soundOff;
+            audioSource.mute = true;
+        }
 	}
 
     void OnApplicationFocus(bool hasFocus)
@@ -144,6 +155,17 @@ public class GameController : MonoBehaviour
         AdRequest request1 = new AdRequest.Builder().Build();
         bannerV.LoadAd(request1);
         bannerV.Show();
+        audioSource.mute = PlayerPrefs.GetInt("mute", 0) == 1;
+        if (!audioSource.mute)
+        {
+            menuSoundButtonText.text = "on";
+            gameSoundButton.sprite = soundOn;
+        }
+        else
+        {
+            menuSoundButtonText.text = "off";
+            gameSoundButton.sprite = soundOff;
+        }
         isPlaying = false;
 
     }
@@ -202,7 +224,7 @@ public class GameController : MonoBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
-                    Resume();
+                    Application.Quit();
                 }
             }
         }
@@ -346,9 +368,9 @@ public class GameController : MonoBehaviour
         isPlaying = true;
 	}
 
-	public bool CanGo(Square _from, Square _to)
+	public bool CanGo(Square _from, Square _to, bool b)
 	{
-		return labyrinthInstance.CanGo (_from, _to);
+		return labyrinthInstance.CanGo (_from, _to, b);
 	}
 
 	void MainPlayLoop ()

@@ -72,23 +72,27 @@ public class BallController : MonoBehaviour {
                 //squareTwo - текущая позиция шарика
                 if ((Mathf.Abs(squareOne.posX - squareTwo.posX) == 1 || Mathf.Abs(squareOne.posX - squareTwo.posX) == GameController.Instance.startingGenSectors * GameController.Instance.gridHeight-1) && (Mathf.Abs(squareOne.posY - squareTwo.posY) == 1 || Mathf.Abs(squareOne.posY - squareTwo.posY) == GameController.Instance.startingGenSectors * GameController.Instance.gridHeight - 1))
                 {
-                    if (GameController.Instance.CanGo(GameController.Instance.labyrinthInstance.GetSquare(squareOne.posX, squareTwo.posY), squareTwo) && GameController.Instance.CanGo(squareOne, GameController.Instance.labyrinthInstance.GetSquare(squareOne.posX, squareTwo.posY)))
+                    if (GameController.Instance.CanGo(GameController.Instance.labyrinthInstance.GetSquare(squareOne.posX, squareTwo.posY), squareTwo, false) && GameController.Instance.CanGo(squareOne, GameController.Instance.labyrinthInstance.GetSquare(squareOne.posX, squareTwo.posY), false))
                     {
                         squareList.Add(GameController.Instance.labyrinthInstance.GetSquare(squareOne.posX, squareTwo.posY).transform.position);
+                        GameController.Instance.labyrinthInstance.GetSquare(squareOne.posX, squareTwo.posY).GetComponent<SpriteRenderer>().color -= new Color(0, 0.25f, 0.25f, 0f);
                         squareList.Add(squareOne.transform.position);
+                        squareOne.GetComponent<SpriteRenderer>().color -= new Color(0, 0.25f, 0.25f, 0f);
                         squareTwo = squareOne;
                     }
-                    else if (GameController.Instance.CanGo(GameController.Instance.labyrinthInstance.GetSquare(squareTwo.posX, squareOne.posY), squareTwo) && GameController.Instance.CanGo(squareOne, GameController.Instance.labyrinthInstance.GetSquare(squareTwo.posX, squareOne.posY)))
+                    else if (GameController.Instance.CanGo(GameController.Instance.labyrinthInstance.GetSquare(squareTwo.posX, squareOne.posY), squareTwo, false) && GameController.Instance.CanGo(squareOne, GameController.Instance.labyrinthInstance.GetSquare(squareTwo.posX, squareOne.posY), false))
                     {
                         squareList.Add(GameController.Instance.labyrinthInstance.GetSquare(squareTwo.posX, squareOne.posY).transform.position);
+                        GameController.Instance.labyrinthInstance.GetSquare(squareTwo.posX, squareOne.posY).GetComponent<SpriteRenderer>().color -= new Color(0, 0.25f, 0.25f, 0f);
                         squareList.Add(squareOne.transform.position);
+                        squareOne.GetComponent<SpriteRenderer>().color -= new Color(0, 0.25f, 0.25f, 0f);
                         squareTwo = squareOne;
                     }
 
                 }
                 else
                 {
-                    if (GameController.Instance.CanGo(squareOne, squareTwo))
+                    if (GameController.Instance.CanGo(squareOne, squareTwo, true))
                     {
                         squareList.Add(squareOne.transform.position);
                         squareTwo = squareOne;
@@ -103,7 +107,7 @@ public class BallController : MonoBehaviour {
                 if (Physics.Raycast(r, out hit, 1000f))
                 {
                     squareOne = hit.collider.GetComponent<Square>();
-                    if (GameController.Instance.CanGo(squareOne, squareTwo))
+                    if (GameController.Instance.CanGo(squareOne, squareTwo, true))
                     {
                         squareList.Add(squareOne.transform.position);
                         squareTwo = squareOne;
